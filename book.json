@@ -4,7 +4,7 @@
   "language": "zh",
    "sidebar": {
      "Mojiahe's GitHub": "https://github.com/mojiahe"
-   }
+   },
   "plugins": [
     "theme-comscore"
   ],
