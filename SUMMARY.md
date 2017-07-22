@@ -1,7 +1,8 @@
 # Summary
 
 * [前沿](/README.md)
-* [di-yi-zhang-ji-qun-da-jian.md](//di-yi-zhang-ji-qun-da-jian.md "1.集群搭建")
-
-
+* [1.集群搭建](11ji-qun-da-jian.md)
+  * [1.1单机模式](11ji-qun-da-jian/11dan-ji-mo-shi.md)
+* [2.hadoop基础学习](2hadoopji-chu-xue-xi.md)
+  * 2.1HDFS学习
 
