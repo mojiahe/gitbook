@@ -2,13 +2,13 @@
   "title": "settings设置",
   "description": "settings设置",
   "language": "zh",
+   "sidebar": {
+            "Mojiahe's GitHub": "https://github.com/mojiahe"
+   }
   "plugins": [
-    "theme-comscore",
-    "disqus"
+    "theme-comscore"
   ],
   "pluginsConfig": {
-     "disqus": {
-            "shortName": "introducetogitbook"
-      }
+    
   }
 }
