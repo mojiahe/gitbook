@@ -4,7 +4,7 @@
   "language": "zh",
   "plugins": [
     "theme-comscore",
-    "expand-active-chapter"
+    "multipart"
   ],
   "pluginsConfig": {
    
