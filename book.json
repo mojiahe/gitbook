@@ -3,8 +3,8 @@
   "description": "settings设置",
   "language": "zh",
   "plugins": [
-    "theme-comscore",
-    "multipart"
+    "theme-comscore"
+   
   ],
   "pluginsConfig": {
    
