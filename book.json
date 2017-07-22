@@ -4,10 +4,11 @@
   "language": "zh",
   "plugins": [
     "theme-comscore",
-    "multipart"
-   
+    "disqus"
   ],
   "pluginsConfig": {
-   
+     "disqus": {
+            "shortName": "introducetogitbook"
+      }
   }
 }
