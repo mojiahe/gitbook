@@ -481,14 +481,14 @@ private synchronized void setupConnection() throws IOException {
         LOG.warn("Unexpected error reading responses on connection " + this, t);
         markClosed(new IOException("Error reading responses", t));
       }
-      
+
       close();
-      
+
       if (LOG.isDebugEnabled())
         LOG.debug(getName() + ": stopped, remaining connections "
             + connections.size());
     }
-    
+
     --------------------------------------------------------------------------------------------------------------
      /* Receive a response.
      * Because only one receiver, so no synchronization on in.
@@ -498,7 +498,7 @@ private synchronized void setupConnection() throws IOException {
         return;
       }
       touch();
-      
+
       try {
         int totalLen = in.readInt();
         RpcResponseHeaderProto header = 
@@ -519,7 +519,7 @@ private synchronized void setupConnection() throws IOException {
           value.readFields(in);                 // read value
           calls.remove(callId);
           call.setRpcResponse(value);
-          
+
           // verify that length was correct
           // only for ProtobufEngine where len can be verified easily
           if (call.getRpcResponse() instanceof ProtobufRpcEngine.RpcWrapper) {
@@ -536,7 +536,7 @@ private synchronized void setupConnection() throws IOException {
             throw new RpcClientException(
                 "RPC response length mismatch on rpc error");
           }
-          
+
           final String exceptionClassName = header.hasExceptionClassName() ?
                 header.getExceptionClassName() : 
                   "ServerDidNotSetExceptionClassName";
@@ -570,7 +570,40 @@ private synchronized void setupConnection() throws IOException {
         notifyAll();
       }
     }
+    ----------------------------------------------------------------------------------------------------------
+     /* wait till someone signals us to start reading RPC response or
+     * it is idle too long, it is marked as to be closed, 
+     * or the client is marked as not running.
+     * 
+     * Return true if it is time to read a response; false otherwise.
+     */
+    private synchronized boolean waitForWork() {
+      if (calls.isEmpty() && !shouldCloseConnection.get()  && running.get())  {
+        long timeout = maxIdleTime-
+              (Time.now()-lastActivity.get());
+        if (timeout>0) {
+          try {
+            wait(timeout);
+          } catch (InterruptedException e) {}
+        }
+      }
+      
+      if (!calls.isEmpty() && !shouldCloseConnection.get() && running.get()) {
+        return true;
+      } else if (shouldCloseConnection.get()) {
+        return false;
+      } else if (calls.isEmpty()) { // idle connection closed or stopped
+        markClosed(null);
+        return false;
+      } else { // get stopped but there are still pending requests 
+        markClosed((IOException)new IOException().initCause(
+            new InterruptedException()));
+        return false;
+      }
+    }
 ```
 
-上面  
+上面四个方法就是这个问题的问答，当请求失败或者请求完毕连接被挂了，就调用notifyAll方法来唤醒当前线程。
+
+另外，当获取响应结果后，从响应头中获取callId来与calls中的callId来对应得到相应call的响应结果。
 
