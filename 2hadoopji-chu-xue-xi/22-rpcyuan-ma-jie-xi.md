@@ -607,5 +607,7 @@ private synchronized void setupConnection() throws IOException {
 
 另外，当获取响应结果后，从响应头中获取callId来与calls中的callId来对应得到相应call的响应结果。
 
+##### 2.2.3 Hadoop的RPC 底层核心思想
+
 这里还有一个问题，就是如何知道远程调用的是哪一个方法？
 
