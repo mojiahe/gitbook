@@ -6,8 +6,6 @@
 
 **WIKI的解析：**远程过程调用（英语：Remote Procedure Call，缩写为 RPC）是一个计算机通信协议。该协议允许运行于一台计算机的程序调用另一台计算机的子程序，而程序员无需额外地为这个交互作用编程。如果涉及的软件采用面向对象编程，那么远程过程调用亦可称作远程调用或远程方法调用，例：Java RMI。简单地说RPC就是调用远程的方法。
 
-
-
 ##### 2.2.2 Hadoop的RPC 源码分析
 
 首先，hadoop的RPC封装全部位于org.apache.hadoop.ipc这个package下。现在带这三个主要问题来分析RPC源码：
@@ -15,8 +13,6 @@
 * 如何与服务器端建立RPC连接？
 * 客户端如何发送数据？
 * 客户端如何接收返回的相应数据？
-
-
 
 ###### 2.2.2.1 如何与服务器端建立RPC连接？
 
@@ -74,9 +70,13 @@ public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
   }
 ```
 
-在上面的源码中，我们可以看到是首先创建了一个Call对象，这个Call对象在这里代表的就是一个远程调用对象，并且这个对象的实例在后面也相继使用，尤其是用来等待服务器返回响应数据。
+在上面的源码中，主要是做了三个事情：RPC连接的建立、发送请求数据、接收响应结果。
 
-紧接着，就是创建了一个collection对象，这里的collection对象官方解析是：读取响应并通知调用者的一个线程；每个collection对象都拥有连接到远程地址的socket。通过保存这个collection对象以达到复用此套接字的效果。这里继续深入了解这个collection的建立过程。
+我们可以看到是首先创建了一个Call对象，这个Call对象在这里代表的就是一个远程调用对象，并且这个对象的实例在后面也相继使用，尤其是用来等待服务器返回响应数据。
+
+紧接着，就是创建了一个collection对象，这里的collection对象官方解析是：读取响应并通知调用者的一个线程；每个collection对象都拥有连接到远程地址的socket。通过保存这个collection对象以达到复用此套接字的效果。
+
+这里继续深入了解这个collection的建立过程。
 
 **代码二：**
 
@@ -104,7 +104,7 @@ public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
         }
       }
     } while (!connection.addCall(call));
-    
+
     //we don't invoke the method below inside "synchronized (connections)"
     //block above. The reason for that is if the server happens to be slow,
     //it will take longer to establish a connection and that will slow the
@@ -189,7 +189,7 @@ public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
               }
             }
           }
-        
+
           if (doPing) {
             inStream = new PingInputStream(inStream);
           }
@@ -200,7 +200,7 @@ public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
             outStream = new BufferedOutputStream(outStream);
           }
           this.out = new DataOutputStream(outStream);
-          
+
           writeConnectionContext(remoteId, authMethod);
 
           // update last activity time
@@ -241,7 +241,7 @@ private synchronized void setupConnection() throws IOException {
           this.socket = socketFactory.createSocket();
           this.socket.setTcpNoDelay(tcpNoDelay);
           this.socket.setKeepAlive(true);
-          
+
           /*
            * Bind the socket to the host specified in the principal name of the
            * client, to ensure Server matching address of the client connection
@@ -254,7 +254,7 @@ private synchronized void setupConnection() throws IOException {
             if (krbInfo != null && krbInfo.clientPrincipal() != null) {
               String host = 
                 SecurityUtil.getHostFromPrincipal(remoteId.getTicket().getUserName());
-              
+
               // If host name is a valid local address then bind socket to it
               InetAddress localAddr = NetUtils.getLocalInetAddress(host);
               if (localAddr != null) {
@@ -262,7 +262,7 @@ private synchronized void setupConnection() throws IOException {
               }
             }
           }
-          
+
           NetUtils.connect(this.socket, server, connectionTimeout);
           if (rpcTimeout > 0) {
             pingInterval = rpcTimeout;  // rpcTimeout overwrites pingInterval
@@ -309,9 +309,9 @@ private synchronized void setupConnection() throws IOException {
     if (socket == null || endpoint == null || timeout < 0) {
       throw new IllegalArgumentException("Illegal argument for connect()");
     }
-    
+
     SocketChannel ch = socket.getChannel();
-    
+
     if (localAddr != null) {
       Class localClass = localAddr.getClass();
       Class remoteClass = endpoint.getClass();
@@ -371,7 +371,7 @@ private synchronized void setupConnection() throws IOException {
 
       // Serialize the call to be sent. This is done from the actual
       // caller thread, rather than the sendParamsExecutor thread,
-      
+
       // so that if the serialization throws an error, it is reported
       // properly. This also parallelizes the serialization.
       //
@@ -397,10 +397,10 @@ private synchronized void setupConnection() throws IOException {
                 if (shouldCloseConnection.get()) {
                   return;
                 }
-                
+
                 if (LOG.isDebugEnabled())
                   LOG.debug(getName() + " sending #" + call.id);
-         
+
                 byte[] data = d.getData();
                 int totalLength = d.getLength();
                 out.writeInt(totalLength); // Total Length
@@ -419,12 +419,12 @@ private synchronized void setupConnection() throws IOException {
             }
           }
         });
-      
+
         try {
           senderFuture.get();
         } catch (ExecutionException e) {
           Throwable cause = e.getCause();
-          
+
           // cause should only be a RuntimeException as the Runnable above
           // catches IOException
           if (cause instanceof RuntimeException) {
