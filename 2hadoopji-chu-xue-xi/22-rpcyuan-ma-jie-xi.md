@@ -587,7 +587,7 @@ private synchronized void setupConnection() throws IOException {
           } catch (InterruptedException e) {}
         }
       }
-      
+
       if (!calls.isEmpty() && !shouldCloseConnection.get() && running.get()) {
         return true;
       } else if (shouldCloseConnection.get()) {
@@ -606,4 +606,6 @@ private synchronized void setupConnection() throws IOException {
 上面四个方法就是这个问题的问答，当请求失败或者请求完毕连接被挂了，就调用notifyAll方法来唤醒当前线程。
 
 另外，当获取响应结果后，从响应头中获取callId来与calls中的callId来对应得到相应call的响应结果。
+
+这里还有一个问题，就是如何知道远程调用的是哪一个方法？
 
