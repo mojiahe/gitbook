@@ -459,3 +459,7 @@ private synchronized void setupConnection() throws IOException {
 
 这里有一个问题就是wait方法需要notify方法或者notifyAll方法来唤醒当前线程，那是哪里做到的呢？唤醒之后，又是怎么知道是这个调用等待的结果呢？
 
+还记得代码三吗？connection建立之后，调用了start，而connection就是一个thread，所以start之后就是调用run方法，我们来分析run方法。
+
+**代码七：**
+
