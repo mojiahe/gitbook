@@ -463,3 +463,114 @@ private synchronized void setupConnection() throws IOException {
 
 **代码七：**
 
+```java
+@Override
+    public void run() {
+      if (LOG.isDebugEnabled())
+        LOG.debug(getName() + ": starting, having connections " 
+            + connections.size());
+
+      try {
+        while (waitForWork()) {//wait here for work - read or close connection
+          receiveRpcResponse();
+        }
+      } catch (Throwable t) {
+        // This truly is unexpected, since we catch IOException in receiveResponse
+        // -- this is only to be really sure that we don't leave a client hanging
+        // forever.
+        LOG.warn("Unexpected error reading responses on connection " + this, t);
+        markClosed(new IOException("Error reading responses", t));
+      }
+      
+      close();
+      
+      if (LOG.isDebugEnabled())
+        LOG.debug(getName() + ": stopped, remaining connections "
+            + connections.size());
+    }
+    
+    --------------------------------------------------------------------------------------------------------------
+     /* Receive a response.
+     * Because only one receiver, so no synchronization on in.
+     */
+    private void receiveRpcResponse() {
+      if (shouldCloseConnection.get()) {
+        return;
+      }
+      touch();
+      
+      try {
+        int totalLen = in.readInt();
+        RpcResponseHeaderProto header = 
+            RpcResponseHeaderProto.parseDelimitedFrom(in);
+        checkResponse(header);
+
+        int headerLen = header.getSerializedSize();
+        headerLen += CodedOutputStream.computeRawVarint32Size(headerLen);
+
+        int callId = header.getCallId();
+        if (LOG.isDebugEnabled())
+          LOG.debug(getName() + " got value #" + callId);
+
+        Call call = calls.get(callId);
+        RpcStatusProto status = header.getStatus();
+        if (status == RpcStatusProto.SUCCESS) {
+          Writable value = ReflectionUtils.newInstance(valueClass, conf);
+          value.readFields(in);                 // read value
+          calls.remove(callId);
+          call.setRpcResponse(value);
+          
+          // verify that length was correct
+          // only for ProtobufEngine where len can be verified easily
+          if (call.getRpcResponse() instanceof ProtobufRpcEngine.RpcWrapper) {
+            ProtobufRpcEngine.RpcWrapper resWrapper = 
+                (ProtobufRpcEngine.RpcWrapper) call.getRpcResponse();
+            if (totalLen != headerLen + resWrapper.getLength()) { 
+              throw new RpcClientException(
+                  "RPC response length mismatch on rpc success");
+            }
+          }
+        } else { // Rpc Request failed
+          // Verify that length was correct
+          if (totalLen != headerLen) {
+            throw new RpcClientException(
+                "RPC response length mismatch on rpc error");
+          }
+          
+          final String exceptionClassName = header.hasExceptionClassName() ?
+                header.getExceptionClassName() : 
+                  "ServerDidNotSetExceptionClassName";
+          final String errorMsg = header.hasErrorMsg() ? 
+                header.getErrorMsg() : "ServerDidNotSetErrorMsg" ;
+          final RpcErrorCodeProto erCode = 
+                    (header.hasErrorDetail() ? header.getErrorDetail() : null);
+          if (erCode == null) {
+             LOG.warn("Detailed error code not set by server on rpc error");
+          }
+          RemoteException re = 
+              ( (erCode == null) ? 
+                  new RemoteException(exceptionClassName, errorMsg) :
+              new RemoteException(exceptionClassName, errorMsg, erCode));
+          if (status == RpcStatusProto.ERROR) {
+            calls.remove(callId);
+            call.setException(re);
+          } else if (status == RpcStatusProto.FATAL) {
+            // Close the connection
+            markClosed(re);
+          }
+        }
+      } catch (IOException e) {
+        markClosed(e);
+      }
+    }
+    ----------------------------------------------------------------------------------------------------------
+    private synchronized void markClosed(IOException e) {
+      if (shouldCloseConnection.compareAndSet(false, true)) {
+        closeException = e;
+        notifyAll();
+      }
+    }
+```
+
+上面  
+
