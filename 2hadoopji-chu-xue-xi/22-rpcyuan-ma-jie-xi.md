@@ -12,9 +12,9 @@
 
 > ###### 如何与服务器端建立RPC连接？
 
-，其中有如下方法：
-
 **代码一：**
+
+开始调用动态代理的方法，跟踪代码：
 
 ```java
 String user = userServiceImpl.login("test", "123456");
@@ -46,7 +46,7 @@ String user = userServiceImpl.login("test", "123456");
     }
 ```
 
-
+在这里可以看到动态代理调用的方法中有
 
 **代码二：**
 
