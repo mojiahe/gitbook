@@ -60,6 +60,18 @@ Dynamic Proxy 是由两个 class 实现的：`java.lang.reflect.Proxy`和`java.l
 
 这个 handler，在 Hadoop 的 RPC 中，就是 Invoker 对象。
 
+上一节的动态代理生成对象：
+
+```java
+ T proxy = (T) Proxy.newProxyInstance(protocol.getClassLoader(),
+        new Class[] { protocol }, new Invoker(protocol, addr, ticket, conf,
+            factory, rpcTimeout, fallbackToSimpleAuth));
+```
+
+这里生成的对象proxy就是宣称实现了protocol这个接口的方法，当这个接口的方法被调用时，真正由Invoker的invoke方法处理。
+
+
+
 **代码二：**
 
 ```java
