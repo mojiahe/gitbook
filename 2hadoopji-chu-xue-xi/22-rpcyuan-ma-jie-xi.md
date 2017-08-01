@@ -2,7 +2,11 @@
 
 ---
 
-首先，hadoop的RPC封装全部位于org.apache.hadoop.ipc这个package下。现在带这三个主要问题来分析RPC客户端源码：
+在上一节的记录中，hadoop的RPC封装全部位于org.apache.hadoop.ipc这个package下。
+
+首先来探索一下
+
+现在带这三个主要问题来分析RPC客户端源码：
 
 * 如何与服务器端建立RPC连接？
 * 客户端如何发送数据？

@@ -8,5 +8,11 @@ WIKI的解析：远程过程调用（英语：Remote Procedure Call，缩写为 
 
 > ##### 图解Hadoop RPC核心流程
 
-![](/assets/RPC核心思想.jpg)
+![](/assets/RPC核心思想.jpg)主要流程：
+
+1. 服务器端建立socket通信，等待客户端请求。
+2. 客户端生成socket代理对象。
+3. 客户端发送数据，请求服务器。
+
+
 
