@@ -6,11 +6,7 @@
 
 注意：hadoop的RPC封装全部位于org.apache.hadoop.ipc这个package下。
 
-
-
 在客户端生成proxy动态对象这个过程中，其实是还没有建立socket连接，只是把要调用的接口类名放到了一个代理对象里，拿到了这个代理对象proxy之后就可以去调用接口类的方法。在RPC的过程中，服务器与客户端约定了，接口类称为Protocol（协议）。那么这个接口类名是怎么与socket关联上的呢？关联上之后调用接口类的方法时，方法调用后就开始了socket通信，这个关联里做了什么手脚？带着这两个问题，开始...
-
-
 
 > 接口类怎么与socket关联？
 
@@ -26,7 +22,7 @@ UserServiceInterface userServiceImpl = RPC.getProxy(UserServiceInterface.class, 
 public static <T> T getProxy(Class<T> protocol, long clientVersion, InetSocketAddress addr, Configuration conf) throws IOException {
         return getProtocolProxy(protocol, clientVersion, addr, conf).getProxy();
     }
- 
+
 ---------------------------------------getProxy----------------------------------------------------------------------------------------
 
 public T getProxy() {
@@ -86,6 +82,55 @@ public T getProxy() {
         return engine;
     }
 ```
+
+这段看到有一个PROTOCOL\_ENGINES，它是一个Map，用以保存已经存在的协议，也就是充当一个协议池的角色。
+
+然后Class impl = conf.getClass\("rpc.engine." + protocol.getName\(\), WritableRpcEngine.class\);根据当前的配置项获取这个协议对应处理类的类名，默认协议处理的类都是org.apache.hadoop.ipc.WritableRpcEngine。最后就返回这个WritableRpcEngine。
+
+接着看代码二，调用的是getProxy\(\);看看WritableRpcEngine的getProxy\(\)方法：
+
+代码四：
+
+```java
+  /** Construct a client-side proxy object that implements the named protocol,
+   * talking to a server at the named address. 
+   * @param <T>*/
+  @Override
+  public <T> ProtocolProxy<T> getProxy(Class<T> protocol, long clientVersion,
+                         InetSocketAddress addr, UserGroupInformation ticket,
+                         Configuration conf, SocketFactory factory,
+                         int rpcTimeout, RetryPolicy connectionRetryPolicy)
+    throws IOException {
+    return getProxy(protocol, clientVersion, addr, ticket, conf, factory,
+      rpcTimeout, connectionRetryPolicy, null);
+  }
+
+-------------------------------------------------------------------------------------------------
+/** Construct a client-side proxy object that implements the named protocol,
+   * talking to a server at the named address. 
+   * @param <T>*/
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T> ProtocolProxy<T> getProxy(Class<T> protocol, long clientVersion,
+                         InetSocketAddress addr, UserGroupInformation ticket,
+                         Configuration conf, SocketFactory factory,
+                         int rpcTimeout, RetryPolicy connectionRetryPolicy,
+                         AtomicBoolean fallbackToSimpleAuth)
+    throws IOException {    
+
+    if (connectionRetryPolicy != null) {
+      throw new UnsupportedOperationException(
+          "Not supported: connectionRetryPolicy=" + connectionRetryPolicy);
+    }
+
+    T proxy = (T) Proxy.newProxyInstance(protocol.getClassLoader(),
+        new Class[] { protocol }, new Invoker(protocol, addr, ticket, conf,
+            factory, rpcTimeout, fallbackToSimpleAuth));
+    return new ProtocolProxy<T>(protocol, proxy, true);
+  }
+```
+
+
 
 
 
