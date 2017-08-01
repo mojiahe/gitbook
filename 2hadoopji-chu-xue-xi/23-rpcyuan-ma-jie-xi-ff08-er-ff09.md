@@ -38,14 +38,14 @@ Configuration conf = new Configuration();
       if (this.instance == null) {
         throw new HadoopIllegalArgumentException("instance is not set");
       }
-      
+
       return getProtocolEngine(this.protocol, this.conf).getServer(
           this.protocol, this.instance, this.bindAddress, this.port,
           this.numHandlers, this.numReaders, this.queueSizePerHandler,
           this.verbose, this.conf, this.secretManager, this.portRangeConfig);
     }
   }
-  
+
   --------------------------------------------------------------------------------------------
   /* Construct a server for a protocol implementation instance listening on a
    * port and address. */
@@ -77,7 +77,7 @@ build的过程的目的就是创建一个server对象，并且在创建Server这
     //监听线程，负责监听socket并创建处理请求的对象
     listener.start();
     handlers = new Handler[handlerCount];
-    
+
     for (int i = 0; i < handlerCount; i++) {
       handlers[i] = new Handler(i);
       handlers[i].start();
@@ -89,11 +89,7 @@ build的过程的目的就是创建一个server对象，并且在创建Server这
 
 > 服务端是如何响应请求？
 
-详细的细节需要分析上面代码的listener和responder两个线程。这里就留给日后一个完善的机会。
+详细的细节需要分析上面代码的listener和responder两个线程。这其中涉及了JAVA NIO的使用，这里就留给日后一个完善的机会。
 
-
-
-到此，Hadoop的RPC就分析完毕了。
-
-
+到此，Hadoop的RPC就分析完毕了。其中动态代理的使用感觉很牛逼，这里反射的使用相对动态代理来说太平常了。
 
