@@ -46,7 +46,11 @@ String user = userServiceImpl.login("test", "123456");
     }
 ```
 
-在这里可以看到动态代理调用的方法中有
+在这里可以看到已经进入动态代理调用的方法中了，这里有两个非常重要的类：
+
+* Invocation:用于封装方法名和参数，作为数据传输层，相当于VO吧。
+
+* Invoker:是动态代理中的调用实现类，继承了InvocationHandler。
 
 **代码二：**
 
