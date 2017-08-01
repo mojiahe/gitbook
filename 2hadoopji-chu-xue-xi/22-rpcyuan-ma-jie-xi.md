@@ -2,19 +2,13 @@
 
 ---
 
-##### 2.3.1 什么是RPC？
-
-**WIKI的解析：**远程过程调用（英语：Remote Procedure Call，缩写为 RPC）是一个计算机通信协议。该协议允许运行于一台计算机的程序调用另一台计算机的子程序，而程序员无需额外地为这个交互作用编程。如果涉及的软件采用面向对象编程，那么远程过程调用亦可称作远程调用或远程方法调用，例：Java RMI。简单地说RPC就是调用远程的方法。
-
-##### 2.3.2 Hadoop的RPC 客户端源码分析
-
 首先，hadoop的RPC封装全部位于org.apache.hadoop.ipc这个package下。现在带这三个主要问题来分析RPC源码：
 
 * 如何与服务器端建立RPC连接？
 * 客户端如何发送数据？
 * 客户端如何接收返回的相应数据？
 
-###### 2.3.2.1 如何与服务器端建立RPC连接？
+> ###### 如何与服务器端建立RPC连接？
 
 org.apache.hadoop.ipc.Client这个类是核心，其中有如下方法：
 
@@ -351,7 +345,7 @@ private synchronized void setupConnection() throws IOException {
 
 到了这里，socket真正建立了，就是通过java的网络编程来监听一个固定端口，终于找到当初在教科书上写得简单例子了。呵呵！
 
-###### 2.3.2.2 客户端如何发送数据？
+> ###### 客户端如何发送数据？
 
 我们回到代码一，发送数据在这个方法connection.sendRpcRequest\(call\);
 
@@ -439,7 +433,7 @@ private synchronized void setupConnection() throws IOException {
 
 这里就是使用collection的DataOutputStream去将请求数据发送的服务器端。
 
-###### 2.3.2.3 客户端如何接收返回的相应数据？
+> ######  客户端如何接收返回的相应数据？
 
 接收服务器端返回的数据在代码一的一段：
 
