@@ -52,6 +52,14 @@ String user = userServiceImpl.login("test", "123456");
 
 * Invoker:是动态代理中的调用实现类，继承了InvocationHandler。
 
+Dynamic Proxy 是由两个 class 实现的：`java.lang.reflect.Proxy`和`java.lang.reflect.InvocationHandler`，后者是一个接口。
+
+所谓 Dynamic Proxy 是这样一种 class：它是在运行时生成的 class，在生成它时你必须提供一组 interface 给它，然后该 class就宣称它实现了这些 interface。
+
+这个 Dynamic Proxy 其实就是一个典型的 Proxy 模式，它会替你作实质性的工作，在生成它的实例时你必须提供一个handler，由它接管实际的工作。
+
+这个 handler，在 Hadoop 的 RPC 中，就是 Invoker 对象。
+
 **代码二：**
 
 ```java
