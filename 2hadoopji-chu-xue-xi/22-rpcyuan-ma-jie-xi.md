@@ -2,7 +2,7 @@
 
 ---
 
-在上一节的记录中，明确了客户端是如何生成proxy动态对象，现在来看看客户端是如何与服务器通信。
+在上一节的记录中，明确了客户端是如何生成proxy动态对象，在动态对象生成过程中只是生成了一个代理对象并且保存了远端服务器端的地址、端口以及一些认证信息、协议的接口类到proxy对象中。现在来看看客户端是如何使用这些信息与服务器进行通信的。
 
 带这三个主要问题来分析RPC客户端源码：
 
@@ -12,9 +12,43 @@
 
 > ###### 如何与服务器端建立RPC连接？
 
-org.apache.hadoop.ipc.Client这个类是核心，其中有如下方法：
+，其中有如下方法：
 
 **代码一：**
+
+```java
+String user = userServiceImpl.login("test", "123456");
+-------------------------------------------------------------
+@Override
+    public Object invoke(Object proxy, Method method, Object[] args)
+      throws Throwable {
+      long startTime = 0;
+      if (LOG.isDebugEnabled()) {
+        startTime = Time.now();
+      }
+      TraceScope traceScope = null;
+      if (Trace.isTracing()) {
+        traceScope = Trace.startSpan(RpcClientUtil.methodToTraceString(method));
+      }
+      ObjectWritable value;
+      try {
+        value = (ObjectWritable)
+          client.call(RPC.RpcKind.RPC_WRITABLE, new Invocation(method, args),
+            remoteId, fallbackToSimpleAuth);
+      } finally {
+        if (traceScope != null) traceScope.close();
+      }
+      if (LOG.isDebugEnabled()) {
+        long callTime = Time.now() - startTime;
+        LOG.debug("Call: " + method.getName() + " " + callTime);
+      }
+      return value.get();
+    }
+```
+
+
+
+**代码二：**
 
 ```java
 public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
@@ -66,7 +100,7 @@ public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
   }
 ```
 
-在上面的源码中，主要是做了三个事情：RPC连接的建立、发送请求数据、接收响应结果。
+在上面的源码位于org.apache.hadoop.ipc.Client这个类，主要是做了三个事情：RPC连接的建立、发送请求数据、接收响应结果。
 
 我们可以看到是首先创建了一个Call对象，这个Call对象在这里代表的就是一个远程调用对象，并且这个对象的实例在后面也相继使用，尤其是用来等待服务器返回响应数据。
 
@@ -74,7 +108,7 @@ public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
 
 这里继续深入了解这个collection的建立过程。
 
-**代码二：**
+**代码三：**
 
 ```java
 /** Get a connection from the pool, or create a new one and add it to the
@@ -112,7 +146,7 @@ public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
 
 这段代码的作用是从连接池collections中以remoteId来获取一个collection对象，如果存在则拿出来用，不存在就创建新的collection并放回连接池中去。最主要的是connection.setupIOstreams这个方法，继续深入。
 
-**代码三：**
+**代码四：**
 
 ```java
  /** Connect to the server and set up the I/O streams. It then sends
@@ -226,7 +260,7 @@ public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
 
 其中setupConnection\(\)方法如下：
 
-**代码四：**
+**代码五：**
 
 ```java
 private synchronized void setupConnection() throws IOException {
@@ -286,7 +320,7 @@ private synchronized void setupConnection() throws IOException {
 
 核心 NetUtils.connect\(this.socket, server, connectionTimeout\);
 
-**代码五：**
+**代码六：**
 
 ```java
 /**
@@ -349,9 +383,9 @@ private synchronized void setupConnection() throws IOException {
 
 > ###### 客户端如何发送数据？
 
-我们回到代码一，发送数据在这个方法connection.sendRpcRequest\(call\);
+我们回到代码二，发送数据在这个方法connection.sendRpcRequest\(call\);
 
-**代码六：**
+**代码七：**
 
 ```java
 /** Initiates a rpc call by sending the rpc request to the remote server.
@@ -437,7 +471,7 @@ private synchronized void setupConnection() throws IOException {
 
 > ###### 客户端如何接收返回的相应数据？
 
-接收服务器端返回的数据在代码一的一段：
+接收服务器端返回的数据在代码二的一段：
 
 ```java
     synchronized (call) {
@@ -455,9 +489,9 @@ private synchronized void setupConnection() throws IOException {
 
 这里有一个问题就是wait方法需要notify方法或者notifyAll方法来唤醒当前线程，那是哪里做到的呢？唤醒之后，又是怎么知道是这个调用等待的结果呢？
 
-还记得代码三吗？connection建立之后，调用了start，而connection就是一个thread，所以start之后就是调用run方法，我们来分析run方法。
+还记得代码四吗？connection建立之后，调用了start，而connection就是一个thread，所以start之后就是调用run方法，我们来分析run方法。
 
-**代码七：**
+**代码八：**
 
 ```java
 @Override
