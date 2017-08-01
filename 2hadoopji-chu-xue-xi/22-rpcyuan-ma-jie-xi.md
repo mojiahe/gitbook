@@ -2,7 +2,7 @@
 
 ---
 
-首先，hadoop的RPC封装全部位于org.apache.hadoop.ipc这个package下。现在带这三个主要问题来分析RPC源码：
+首先，hadoop的RPC封装全部位于org.apache.hadoop.ipc这个package下。现在带这三个主要问题来分析RPC客户端源码：
 
 * 如何与服务器端建立RPC连接？
 * 客户端如何发送数据？
@@ -433,7 +433,7 @@ private synchronized void setupConnection() throws IOException {
 
 这里就是使用collection的DataOutputStream去将请求数据发送的服务器端。
 
-> ######  客户端如何接收返回的相应数据？
+> ###### 客户端如何接收返回的相应数据？
 
 接收服务器端返回的数据在代码一的一段：
 
