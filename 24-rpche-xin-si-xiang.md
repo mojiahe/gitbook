@@ -8,6 +8,10 @@ WIKI的解析：远程过程调用（英语：Remote Procedure Call，缩写为 
 
 简单地说RPC就是调用远程的方法，但是其中用到了较高级的处理方式，例如动态代理、反射、java nio等等，这些都是实实在在的可学之处。
 
+> 图解RPC框架
+
+![](/assets/0585.png)
+
 > ##### 图解Hadoop RPC核心流程
 
 ![](/assets/RPC核心思想.jpg)主要流程：
