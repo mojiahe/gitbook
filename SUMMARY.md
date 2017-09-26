@@ -9,4 +9,5 @@
   * [2.3 RPC源码解析（一）](2hadoopji-chu-xue-xi/23-rpcyuan-ma-jie-xi-ff08-yi-ff09.md)
   * [2.4 RPC源码解析（二）](2hadoopji-chu-xue-xi/22-rpcyuan-ma-jie-xi.md)
   * [2.5 RPC源码解析（三）](2hadoopji-chu-xue-xi/23-rpcyuan-ma-jie-xi-ff08-er-ff09.md)
+  * [2.6 MapReduce核心解读](2hadoopji-chu-xue-xi/26-mapreducehe-xin-jie-du.md)
 
